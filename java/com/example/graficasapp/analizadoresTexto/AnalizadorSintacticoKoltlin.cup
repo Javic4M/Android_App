@@ -1,0 +1,167 @@
+package com.example.graficasapp.analizadores;
+
+import java_cup.runtime.*;
+
+parser code {:
+
+    private Symbol symbol;
+    private String contenido;
+
+    public SintacticoKoltlin(LexicoKoltlin lexico) {
+        super(lexico);
+    }
+
+    public void syntax_error(Symbol cur_token) {
+        symbol = cur_token;
+        contenido = (String)(cur_token.value);
+    }
+
+    public Symbol getSymbol() {
+        return this.symbol;
+    }
+
+    public String getContenido() {
+        return this.contenido;
+    }
+:}
+
+/* Terminales */
+terminal            LLAVE_I, LLAVE_D, CORCHETE_I, CORCHETE_D, DOS_PUNTOS, COMA, DATA, CHART,
+                    TITULO, DESCRIPCION, PALABRA_CLAVE, ENCABEZADO, PIE, COPYRIGHT, FONDO, FUENTE, TAMANIO_FUENTE, X_BARRA, Y_BARRA,
+                    CATEGORIA, LABEL, TAMANIO, X, Y, VALOR, COLOR, NOMBRE, PUNTOS, POSICION, LINEA_ESTILO,
+                    IF, ELSE, FOR, WHILE, PARENTESIS_I, PARENTESIS_D, DOBLE_IGUAL, NO_IGUAL, IGUAL, MAYOR, MAYOR_IGUAL, MENOR, MENOR_IGUAL, MAS, PUNTO_Y_COMA;
+
+terminal String     PIXEL, NUMERO_COLOR, TIPO, PALABRA, IDENTIFICADOR;
+terminal int        NUMERO;
+
+/* No Terminales */
+non terminal        inicio, claves, iniciodata, interior1, interior2,
+                    simplebarra, expandidobarra,
+                    simplepastel, expandidopastel, extra2,
+                    simplepunto, expandidopunto, extra1,
+                    simplelinea, expandidolinea, extra3,
+                    complemento, identificador;
+
+/* Gramatica */
+start with inicio;
+
+/* ------------------------------------ Comienzo ------------------------------------ */
+inicio ::= LLAVE_I TITULO DOS_PUNTOS PALABRA COMA
+        DESCRIPCION DOS_PUNTOS PALABRA COMA
+        PALABRA_CLAVE DOS_PUNTOS CORCHETE_I claves CORCHETE_D COMA
+        ENCABEZADO DOS_PUNTOS LLAVE_I TITULO DOS_PUNTOS PALABRA LLAVE_D COMA
+        PIE DOS_PUNTOS LLAVE_I COPYRIGHT DOS_PUNTOS PALABRA LLAVE_D COMA
+        FONDO DOS_PUNTOS NUMERO_COLOR COMA
+        FUENTE DOS_PUNTOS PALABRA COMA
+        TAMANIO_FUENTE DOS_PUNTOS PIXEL iniciodata LLAVE_D
+        ;
+
+claves ::= PALABRA COMA claves
+        | PALABRA
+        ;
+
+iniciodata ::= LLAVE_I DATA DOS_PUNTOS CORCHETE_I interior1 LLAVE_D iniciodata
+        | IF PARENTESIS_I complemento PARENTESIS_D LLAVE_I iniciodata LLAVE_D iniciodata
+        | IF PARENTESIS_I complemento PARENTESIS_D LLAVE_I iniciodata LLAVE_D
+        | IF PARENTESIS_I complemento PARENTESIS_D LLAVE_I iniciodata LLAVE_D ELSE LLAVE_I iniciodata LLAVE_D iniciodata
+        | IF PARENTESIS_I complemento PARENTESIS_D LLAVE_I iniciodata LLAVE_D ELSE LLAVE_I iniciodata LLAVE_D
+        | FOR PARENTESIS_I complemento PUNTO_Y_COMA complemento PUNTO_Y_COMA IDENTIFICADOR MAS MAS PARENTESIS_D LLAVE_I iniciodata LLAVE_D iniciodata
+        | FOR PARENTESIS_I complemento PUNTO_Y_COMA complemento PUNTO_Y_COMA IDENTIFICADOR MAS MAS PARENTESIS_D LLAVE_I iniciodata LLAVE_D
+        | WHILE PARENTESIS_I complemento PARENTESIS_D LLAVE_I iniciodata IDENTIFICADOR MAS MAS LLAVE_D iniciodata
+        | WHILE PARENTESIS_I complemento PARENTESIS_D LLAVE_I iniciodata IDENTIFICADOR MAS MAS LLAVE_D
+        | LLAVE_I DATA DOS_PUNTOS CORCHETE_I interior1 LLAVE_D
+        ;
+
+complemento ::= identificador IGUAL identificador
+        | identificador DOBLE_IGUAL identificador
+        | identificador NO_IGUAL identificador
+        | identificador MAYOR identificador
+        | identificador MENOR identificador
+        | identificador MAYOR_IGUAL identificador
+        | identificador MENOR_IGUAL identificador
+        ;
+
+identificador ::= IDENTIFICADOR
+        | NUMERO
+        ;
+
+interior1 ::= LLAVE_I CATEGORIA DOS_PUNTOS TIPO COMA VALOR DOS_PUNTOS NUMERO LLAVE_D COMA simplebarra
+        | LLAVE_I CATEGORIA DOS_PUNTOS TIPO COMA VALOR DOS_PUNTOS NUMERO LLAVE_D CORCHETE_D
+        | LLAVE_I CATEGORIA DOS_PUNTOS TIPO COMA VALOR DOS_PUNTOS NUMERO COMA COLOR DOS_PUNTOS NUMERO_COLOR LLAVE_D COMA expandidobarra
+        | LLAVE_I CATEGORIA DOS_PUNTOS TIPO COMA VALOR DOS_PUNTOS NUMERO COMA COLOR DOS_PUNTOS NUMERO_COLOR LLAVE_D CORCHETE_D COMA extra1
+        | LLAVE_I LABEL DOS_PUNTOS TIPO COMA VALOR DOS_PUNTOS NUMERO LLAVE_D COMA simplepastel
+        | LLAVE_I LABEL DOS_PUNTOS TIPO COMA VALOR DOS_PUNTOS NUMERO LLAVE_D CORCHETE_D
+        | LLAVE_I LABEL DOS_PUNTOS TIPO COMA VALOR DOS_PUNTOS NUMERO COMA COLOR DOS_PUNTOS NUMERO_COLOR LLAVE_D COMA expandidopastel
+        | LLAVE_I LABEL DOS_PUNTOS TIPO COMA VALOR DOS_PUNTOS NUMERO COMA COLOR DOS_PUNTOS NUMERO_COLOR LLAVE_D CORCHETE_D COMA extra2
+        | LLAVE_I X DOS_PUNTOS NUMERO COMA Y DOS_PUNTOS NUMERO LLAVE_D COMA simplepunto
+        | LLAVE_I X DOS_PUNTOS NUMERO COMA Y DOS_PUNTOS NUMERO LLAVE_D CORCHETE_D
+        | LLAVE_I X DOS_PUNTOS NUMERO COMA Y DOS_PUNTOS NUMERO COMA TAMANIO DOS_PUNTOS NUMERO COMA COLOR DOS_PUNTOS NUMERO_COLOR LLAVE_D COMA expandidopunto
+        | LLAVE_I X DOS_PUNTOS NUMERO COMA Y DOS_PUNTOS NUMERO COMA TAMANIO DOS_PUNTOS NUMERO COMA COLOR DOS_PUNTOS NUMERO_COLOR LLAVE_D COMA extra1
+        | LLAVE_I NOMBRE interior2
+        ;
+
+interior2 ::= DOS_PUNTOS PALABRA COMA PUNTOS DOS_PUNTOS CORCHETE_I simplelinea CORCHETE_D LLAVE_D COMA LLAVE_I NOMBRE interior2
+	| DOS_PUNTOS PALABRA COMA PUNTOS DOS_PUNTOS CORCHETE_I simplelinea CORCHETE_D LLAVE_D CORCHETE_D COMA extra1
+        | DOS_PUNTOS PALABRA COMA PUNTOS DOS_PUNTOS CORCHETE_I expandidolinea CORCHETE_D COMA extra3 LLAVE_D COMA LLAVE_I NOMBRE interior2
+        | DOS_PUNTOS PALABRA COMA PUNTOS DOS_PUNTOS CORCHETE_I expandidolinea CORCHETE_D COMA extra3 LLAVE_D CORCHETE_D COMA extra1
+        ;
+
+
+
+/* ------------------------------------ Barras ------------------------------------ */
+simplebarra ::= LLAVE_I CATEGORIA DOS_PUNTOS TIPO COMA VALOR DOS_PUNTOS NUMERO LLAVE_D COMA simplebarra
+        | LLAVE_I CATEGORIA DOS_PUNTOS TIPO COMA VALOR DOS_PUNTOS NUMERO LLAVE_D CORCHETE_D
+        ;
+
+expandidobarra ::= LLAVE_I CATEGORIA DOS_PUNTOS TIPO COMA VALOR DOS_PUNTOS NUMERO COMA COLOR DOS_PUNTOS NUMERO_COLOR LLAVE_D COMA expandidobarra
+	| LLAVE_I CATEGORIA DOS_PUNTOS TIPO COMA VALOR DOS_PUNTOS NUMERO COMA COLOR DOS_PUNTOS NUMERO_COLOR LLAVE_D CORCHETE_D COMA extra1
+        ;
+
+
+
+/* ------------------------------------ Pastel ------------------------------------ */
+simplepastel ::= LLAVE_I LABEL DOS_PUNTOS TIPO COMA VALOR DOS_PUNTOS NUMERO LLAVE_D COMA simplepastel
+	| LLAVE_I LABEL DOS_PUNTOS TIPO COMA VALOR DOS_PUNTOS NUMERO LLAVE_D CORCHETE_D
+	;
+
+expandidopastel ::= LLAVE_I LABEL DOS_PUNTOS TIPO COMA VALOR DOS_PUNTOS NUMERO COMA COLOR DOS_PUNTOS NUMERO_COLOR LLAVE_D COMA expandidopastel
+	| LLAVE_I LABEL DOS_PUNTOS TIPO COMA VALOR DOS_PUNTOS NUMERO COMA COLOR DOS_PUNTOS NUMERO_COLOR LLAVE_D CORCHETE_D COMA extra2
+	;
+
+/* PENDIENTE DE VER SI HAY ESPECIFICACIONES PARA EL LUGAR=PALABRA (BOTTOM) */
+extra2 ::= CHART DOS_PUNTOS LLAVE_I TITULO DOS_PUNTOS PALABRA COMA POSICION DOS_PUNTOS PALABRA LLAVE_D
+	;
+
+
+
+
+/* ------------------------------------ Puntos ------------------------------------ */
+simplepunto ::= LLAVE_I X DOS_PUNTOS NUMERO COMA Y DOS_PUNTOS NUMERO LLAVE_D COMA simplepunto
+        |       LLAVE_I X DOS_PUNTOS NUMERO COMA Y DOS_PUNTOS NUMERO LLAVE_D CORCHETE_D
+        ;
+
+expandidopunto ::= LLAVE_I X DOS_PUNTOS NUMERO COMA Y DOS_PUNTOS NUMERO COMA TAMANIO DOS_PUNTOS NUMERO COMA COLOR DOS_PUNTOS NUMERO_COLOR LLAVE_D COMA expandidopunto
+        | LLAVE_I X DOS_PUNTOS NUMERO COMA Y DOS_PUNTOS NUMERO COMA TAMANIO DOS_PUNTOS NUMERO COMA COLOR DOS_PUNTOS NUMERO_COLOR LLAVE_D CORCHETE_D COMA extra1
+        ;
+
+
+
+
+/* ------------------------------------ Parte en Común entre el Comienzo, Barras y Puntos ------------------------------------ */
+extra1 ::= CHART DOS_PUNTOS LLAVE_I TITULO DOS_PUNTOS PALABRA COMA X_BARRA DOS_PUNTOS PALABRA COMA Y_BARRA DOS_PUNTOS PALABRA LLAVE_D
+	;
+
+
+
+
+/* ------------------------------------ Lineas ------------------------------------ */
+simplelinea ::= LLAVE_I X DOS_PUNTOS NUMERO COMA Y DOS_PUNTOS NUMERO LLAVE_D COMA simplelinea
+        | LLAVE_I X DOS_PUNTOS NUMERO COMA Y DOS_PUNTOS NUMERO LLAVE_D
+        ;
+
+expandidolinea ::= LLAVE_I X DOS_PUNTOS NUMERO COMA Y DOS_PUNTOS NUMERO COMA LABEL DOS_PUNTOS PALABRA LLAVE_D COMA expandidolinea
+        | LLAVE_I X DOS_PUNTOS NUMERO COMA Y DOS_PUNTOS NUMERO COMA LABEL DOS_PUNTOS PALABRA LLAVE_D
+        ;
+
+extra3 ::= COLOR DOS_PUNTOS NUMERO_COLOR COMA LINEA_ESTILO DOS_PUNTOS PALABRA
+        ;
